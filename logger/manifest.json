@@ -1,0 +1,22 @@
+{
+  "update_url": "https://clients2.google.com/service/update2/crx",
+  "name": "Logger",
+  "version": "0.1.16",
+  "description": "",
+  "background": {
+    "service_worker": "background.js"
+  },
+  "permissions": [
+    "history",
+    "identity",
+    "identity.email",
+    "alarms"
+  ],
+  "icons": {
+    "16": "images/icon-16x16.png",
+    "32": "images/icon-48x48.png",
+    "48": "images/icon-48x48.png",
+    "128": "images/icon-128x128.png"
+  },
+  "manifest_version": 3
+}

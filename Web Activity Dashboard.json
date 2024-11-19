@@ -1,0 +1,509 @@
+{
+    "visualizations": {
+        "viz_tJqzFVwF": {
+            "type": "splunk.table",
+            "dataSources": {
+                "primary": "ds_yFHOv7iA"
+            },
+            "title": "Top Visited Sites",
+            "options": {
+                "columnFormat": {
+                    "domain": {
+                        "width": 175
+                    },
+                    "count": {
+                        "width": 91
+                    },
+                    "category": {
+                        "width": 123
+                    },
+                    "#": {
+                        "width": 37
+                    },
+                    "main_domain": {
+                        "width": 225
+                    }
+                },
+                "count": 20,
+                "showRowNumbers": true
+            }
+        },
+        "viz_6rBAymlN": {
+            "type": "splunk.table",
+            "options": {
+                "columnFormat": {
+                    "title": {
+                        "width": 252
+                    },
+                    "count": {
+                        "width": 77
+                    },
+                    "#": {
+                        "width": 44.5
+                    }
+                },
+                "count": 25,
+                "showRowNumbers": true
+            },
+            "dataSources": {
+                "primary": "ds_nB5h0yt4"
+            },
+            "title": "Top Google Docs"
+        },
+        "viz_Bt3ZJ6kY": {
+            "type": "splunk.column",
+            "dataSources": {
+                "primary": "ds_XG8s79WA"
+            },
+            "title": "Chromebook Website Hits by School"
+        },
+        "viz_vnHfUdtB": {
+            "type": "splunk.table",
+            "dataSources": {
+                "primary": "ds_Rs5stzCy"
+            },
+            "title": "Top Google Searches",
+            "options": {
+                "columnFormat": {
+                    "title": {
+                        "width": 280
+                    },
+                    "gid": {
+                        "width": 180
+                    },
+                    "count": {
+                        "width": 69
+                    },
+                    "weight": {
+                        "data": "> table | seriesByName(\"weight\") | formatByType(weightColumnFormatEditorConfig)",
+                        "width": 94
+                    },
+                    "#": {
+                        "width": 77
+                    }
+                },
+                "count": 25,
+                "showRowNumbers": true
+            },
+            "context": {
+                "weightColumnFormatEditorConfig": {
+                    "number": {
+                        "thousandSeparated": false,
+                        "unitPosition": "after",
+                        "precision": 0
+                    }
+                }
+            }
+        },
+        "viz_AuxJll5F": {
+            "type": "splunk.column",
+            "dataSources": {
+                "primary": "ds_pNGxD9xM"
+            },
+            "title": "Chromebook Website Hits by Category"
+        },
+        "viz_JlQP21O7": {
+            "type": "splunk.table",
+            "options": {
+                "columnFormat": {
+                    "title": {
+                        "width": 256
+                    },
+                    "#": {
+                        "width": 58.333333333333314
+                    }
+                },
+                "count": 25,
+                "showRowNumbers": true
+            },
+            "dataSources": {
+                "primary": "ds_Lxbfem4M"
+            },
+            "title": "Top YouTube Videos",
+            "eventHandlers": []
+        }
+    },
+    "dataSources": {
+        "ds_yFHOv7iA": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* sourcetype=\"chrome_browser\" school=$site$ grade=$grade$ url=*$filter_domain$* NOT url=$google$ sectionIDs{}=$sectionid$ NOT category=null\n| rex field=url \"^(?<main_domain>\\w+\\:\\/\\/[^\\/]+)\"\n|  top main_domain,category limit=0 |  fields- _tc,percent",
+                "queryParameters": {
+                    "earliest": "$global_time.earliest$",
+                    "latest": "$global_time.latest$"
+                }
+            },
+            "name": "Top Domains"
+        },
+        "ds_nB5h0yt4": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* sourcetype=\"chrome_browser\" url=*docs.google.com* school=$site$ grade=$grade$ url=*$filter_domain$* sectionIDs{}=$sectionid$ NOT url=$google$ | top title,url limit=0\n|  fields- _tc \n|  fields title,count,url",
+                "queryParameters": {
+                    "earliest": "$global_time.earliest$",
+                    "latest": "$global_time.latest$"
+                }
+            },
+            "name": "Top Google Docs"
+        },
+        "ds_XG8s79WA": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* sourcetype=\"chrome_browser\" school=$site$ grade=$grade$ url=*$filter_domain$* sectionIDs{}=$sectionid$ NOT domain=$google$\n|  rex field=url \"^(?<main_domain>\\w+\\:\\/\\/[^\\/]+)\"\n|  timechart span=$graph_step$m count by $sort$ limit=0 \n| addtotals \n| sort -Total\n| fields - Total",
+                "queryParameters": {
+                    "earliest": "$global_time.earliest$",
+                    "latest": "$global_time.latest$"
+                }
+            },
+            "name": "Hits by Time of Day"
+        },
+        "ds_Rs5stzCy": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* url=*google.com* title=\"* - Google Search\" sourcetype=chrome_browser school=$site$ grade=$grade$ domain=*$filter_domain$* sectionIDs{}=$sectionid$ NOT url=$google$ \n| top title,transition limit=0 \n| eval title=replace (title, \".\\-.Google.Search\", \"\")\n| fields- _tc,count \n| rename percent AS weight \n| table title,weight,transition",
+                "queryParameters": {
+                    "earliest": "$global_time.earliest$",
+                    "latest": "$global_time.latest$"
+                }
+            },
+            "name": "Google Search Terms"
+        },
+        "ds_pNGxD9xM": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* sourcetype=\"chrome_browser\" school=$site$ grade=$grade$ url=*$filter_domain$* NOT domain=$google$ sectionIDs{}=$sectionid$ NOT category=null \n|  timechart span=$graph_step$m count by category limit=0"
+            },
+            "name": "Hits by Category"
+        },
+        "ds_Lxbfem4M": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* url=*youtube.com* title=\"* - YouTube\" sourcetype=chrome_browser school=$site$ grade=$grade$ domain=*$filter_domain$* sectionIDs{}=$sectionid$ NOT url=$google$ \n| top title,url limit=0 \n| eval title=replace (title, \".\\-.YouTube\", \"\")\n| fields- _tc,percent \n| table title,url,count"
+            },
+            "name": "Search_1"
+        },
+        "ds_5okjnjax_ds_XG8s79WA": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* sourcetype=\"chrome_browser\" school=$site$ grade=$grade$ url=*$filter_domain$* sectionIDs{}=$sectionid$ NOT domain=$google$\n|  timechart span=$graph_step$m count by category limit=0",
+                "queryParameters": {
+                    "earliest": "$global_time.earliest$",
+                    "latest": "$global_time.latest$"
+                }
+            },
+            "name": "Hits by Time of Day copy 1"
+        },
+        "ds_aeiHuxhW_ds_XG8s79WA": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* sourcetype=\"chrome_browser\" school=$site$ grade=$grade$ url=*$filter_domain$* sectionIDs{}=$sectionid$ { NOT domain=$google$\n|  timechart span=$graph_step$m count by category limit=0 ",
+                "queryParameters": {
+                    "earliest": "$global_time.earliest$",
+                    "latest": "$global_time.latest$"
+                }
+            },
+            "name": "Hits by Time of Day copy 2"
+        },
+        "ds_HsIJVYsj_ds_XG8s79WA": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* sourcetype=\"chrome_browser\" school=$site$ grade=$grade$ url=*$filter_domain$* sectionIDs{}=$sectionid$ { NOT domain=$google$\n|  timechart span=$graph_step$m count by category limit=0 \n| addtotals \n| sort -Total\n| fields - Total",
+                "queryParameters": {
+                    "earliest": "$global_time.earliest$",
+                    "latest": "$global_time.latest$"
+                }
+            },
+            "name": "Hits by Time of Day copy 3"
+        },
+        "ds_onTilkpz_ds_XG8s79WA": {
+            "type": "ds.search",
+            "options": {
+                "query": "index=* sourcetype=\"chrome_browser\" school=$site$ grade=$grade$ url=*$filter_domain$* sectionIDs{}=$sectionid$ { NOT domain=$google$\n|  timechart span=$graph_step$m count by id limit=0 \n| addtotals \n| sort -Total\n| fields - Total",
+                "queryParameters": {
+                    "earliest": "$global_time.earliest$",
+                    "latest": "$global_time.latest$"
+                }
+            },
+            "name": "Hits by Time of Day copy 4"
+        }
+    },
+    "defaults": {
+        "dataSources": {
+            "ds.search": {
+                "options": {
+                    "queryParameters": {
+                        "latest": "$global_time.latest$",
+                        "earliest": "$global_time.earliest$"
+                    }
+                }
+            }
+        }
+    },
+    "inputs": {
+        "input_global_trp": {
+            "type": "input.timerange",
+            "options": {
+                "token": "global_time",
+                "defaultValue": "-8h@h,now"
+            },
+            "title": "Global Time Range"
+        },
+        "input_OBi9hlrC": {
+            "options": {
+                "items": [
+                    {
+                        "label": "All Sites",
+                        "value": "*"
+                    },
+                    {
+                        "label": "School Name",
+                        "value": "\"School Name\""
+                    }
+                ],
+                "token": "site",
+                "defaultValue": "*"
+            },
+            "title": "School Site",
+            "type": "input.dropdown"
+        },
+        "input_xVJZ8ZM1": {
+            "options": {
+                "items": [
+                    {
+                        "label": "All Grades",
+                        "value": "*"
+                    },
+                    {
+                        "label": "6th Grade",
+                        "value": "6"
+                    },
+                    {
+                        "label": "7th Grade",
+                        "value": "7"
+                    },
+                    {
+                        "label": "8th Grade",
+                        "value": "8"
+                    },
+                    {
+                        "label": "1st Grade",
+                        "value": "1"
+                    },
+                    {
+                        "label": "2nd Grade",
+                        "value": "2"
+                    },
+                    {
+                        "label": "3rd Grade",
+                        "value": "3"
+                    },
+                    {
+                        "label": "4th Grade",
+                        "value": "4"
+                    },
+                    {
+                        "label": "5th Grade",
+                        "value": "5"
+                    }
+                ],
+                "token": "grade",
+                "defaultValue": "*"
+            },
+            "title": "Grade Level",
+            "type": "input.dropdown"
+        },
+        "input_SziV9Oxa": {
+            "options": {
+                "items": [
+                    {
+                        "label": "No",
+                        "value": "#"
+                    },
+                    {
+                        "label": "Yes",
+                        "value": "*google.com*"
+                    }
+                ],
+                "defaultValue": "#",
+                "token": "google"
+            },
+            "title": "Hide Google Entries?",
+            "type": "input.dropdown"
+        },
+        "input_CBedVPJD": {
+            "options": {
+                "defaultValue": "*",
+                "token": "filter_domain"
+            },
+            "title": "Domain",
+            "type": "input.text"
+        },
+        "input_m10d1d27": {
+            "options": {
+                "defaultValue": "*",
+                "token": "sectionid"
+            },
+            "title": "Section ID",
+            "type": "input.text"
+        },
+        "input_cNK6HFNH": {
+            "options": {
+                "items": [
+                    {
+                        "label": "1 Minute",
+                        "value": "1"
+                    },
+                    {
+                        "label": "5 Minutes",
+                        "value": "5"
+                    },
+                    {
+                        "label": "10 Minutes",
+                        "value": "10"
+                    },
+                    {
+                        "label": "30 Minutes",
+                        "value": "30"
+                    },
+                    {
+                        "label": "1 Hour",
+                        "value": "60"
+                    },
+                    {
+                        "label": "2 Hours",
+                        "value": "120"
+                    }
+                ],
+                "token": "graph_step",
+                "defaultValue": "30"
+            },
+            "title": "Graph Step",
+            "type": "input.dropdown"
+        },
+        "input_f9zdVH15": {
+            "options": {
+                "items": [
+                    {
+                        "label": "School",
+                        "value": "school"
+                    },
+                    {
+                        "label": "Google ID",
+                        "value": "gid"
+                    },
+                    {
+                        "label": "Domain",
+                        "value": "main_domain"
+                    }
+                ],
+                "token": "sort",
+                "selectFirstSearchResult": true
+            },
+            "title": "Count By",
+            "type": "input.dropdown"
+        }
+    },
+    "description": "Use the filtering options below to narrow results based on time, school site, grade level, and PowerSchool SectionID. You can further filter by hiding Google entries, or searching for specific domains/websites.",
+    "title": "CampbellUSD Web Activity",
+    "layout": {
+        "tabs": {
+            "items": [
+                {
+                    "layoutId": "layout_1",
+                    "label": "New tab"
+                }
+            ]
+        },
+        "layoutDefinitions": {
+            "layout_1": {
+                "type": "absolute",
+                "options": {
+                    "display": "auto-scale",
+                    "width": 1920,
+                    "height": 1080
+                },
+                "structure": [
+                    {
+                        "item": "viz_tJqzFVwF",
+                        "type": "block",
+                        "position": {
+                            "x": 1380,
+                            "y": 10,
+                            "w": 530,
+                            "h": 610
+                        }
+                    },
+                    {
+                        "item": "viz_6rBAymlN",
+                        "type": "block",
+                        "position": {
+                            "x": 10,
+                            "y": 630,
+                            "w": 620,
+                            "h": 440
+                        }
+                    },
+                    {
+                        "item": "viz_Bt3ZJ6kY",
+                        "type": "block",
+                        "position": {
+                            "x": 10,
+                            "y": 10,
+                            "w": 1360,
+                            "h": 300
+                        }
+                    },
+                    {
+                        "item": "viz_vnHfUdtB",
+                        "type": "block",
+                        "position": {
+                            "x": 1290,
+                            "y": 630,
+                            "w": 620,
+                            "h": 440
+                        }
+                    },
+                    {
+                        "item": "viz_AuxJll5F",
+                        "type": "block",
+                        "position": {
+                            "x": 10,
+                            "y": 320,
+                            "w": 1360,
+                            "h": 300
+                        }
+                    },
+                    {
+                        "item": "viz_JlQP21O7",
+                        "type": "block",
+                        "position": {
+                            "x": 640,
+                            "y": 630,
+                            "w": 640,
+                            "h": 440
+                        }
+                    },
+                    {
+                        "item": "input_f9zdVH15",
+                        "type": "input",
+                        "position": {
+                            "x": 260,
+                            "y": 10,
+                            "w": 160,
+                            "h": 82
+                        }
+                    }
+                ]
+            }
+        },
+        "globalInputs": [
+            "input_global_trp",
+            "input_cNK6HFNH",
+            "input_OBi9hlrC",
+            "input_xVJZ8ZM1",
+            "input_m10d1d27",
+            "input_SziV9Oxa",
+            "input_CBedVPJD"
+        ]
+    }
+}
